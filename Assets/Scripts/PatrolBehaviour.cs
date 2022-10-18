@@ -31,7 +31,7 @@ public class PatrolBehaviour : MonoBehaviour
 
         _startPosition = _patrolPoints[_currentPointIndex].position;
         _endPosition = _patrolPoints[nextPointIndex].position;
-        _travelTime = Vector3.Distance(_startPosition, _endPosition) / _speed;
+        _travelTime = Vector3.Distance(_startPosition, _endPosition)/_speed;
 
         _currentPointIndex = nextPointIndex;
     }
@@ -45,8 +45,13 @@ public class PatrolBehaviour : MonoBehaviour
         }
 
         MoveToNextPoint();
-
-        CheckArrival();
+        
+        if (_currentTime > _travelTime)
+        {
+            _currentDelay = 0;
+            _currentTime = 0f;
+            SetNextPoints();
+        }
     }
 
     private void MoveToNextPoint()
@@ -55,15 +60,7 @@ public class PatrolBehaviour : MonoBehaviour
         var progress = _currentTime / _travelTime;
         transform.position = Vector3.Lerp(_startPosition, _endPosition, progress);
     }
-
-    private void CheckArrival()
-    {
-        if (_currentTime>_travelTime)
-        {
-            _currentTime = 0;
-            SetNextPoints();
-        }
-    }
+    
 
     
 }
