@@ -10,54 +10,60 @@ public class PatrolBehaviour : MonoBehaviour
 {
     [SerializeField] private Transform[] _patrolPoints;
     [SerializeField] private float _speed;
-    [SerializeField] private float _detentionBeforeNextPoint;
+    [SerializeField] private float _delayBeforeNextPoint;
+
+    private Vector3 _startPosition;
+    private Vector3 _endPosition;
+    private float _travelTime;
 
     private float _currentTime;
-    private float _currentDetention;
-    private int _firstIndex = 0;
-    private int _secondIndex = 1;
-    private bool _isLastPoint;
+    private float _currentDelay;
+    private int _currentPointIndex;
+
+    private void Awake()
+    {
+        SetNextPoints();
+    }
+
+    private void SetNextPoints()
+    {
+        var nextPointIndex = (_currentPointIndex + 1) % _patrolPoints.Length;
+
+        _startPosition = _patrolPoints[_currentPointIndex].position;
+        _endPosition = _patrolPoints[nextPointIndex].position;
+        _travelTime = Vector3.Distance(_startPosition, _endPosition) / _speed;
+
+        _currentPointIndex = nextPointIndex;
+    }
 
     private void Update()
     {
-        _currentDetention += Time.deltaTime;
-        if (_currentDetention<_detentionBeforeNextPoint)
+        _currentDelay += Time.deltaTime;
+        if (_currentDelay<_delayBeforeNextPoint)
         {
             return;
         }
 
-        CheckStartOver();
+        MoveToNextPoint();
 
-        var distance = Vector3.Distance(_patrolPoints[_firstIndex].position, _patrolPoints[_secondIndex].position);
-        var travelTime = distance / _speed;
-        _currentTime += Time.deltaTime;
-        var progress = _currentTime / travelTime;
-
-        var newPosition = Vector3.Lerp(_patrolPoints[_firstIndex].position, _patrolPoints[_secondIndex].position,
-            progress);
-        transform.position = newPosition;
-
-        if (!(_currentTime > travelTime)) return;
-        _currentDetention = 0f;
-        _currentTime = 0f;
-        _firstIndex++;
-        _secondIndex++;
-
-        if (!_isLastPoint) return;
-        _firstIndex = 0;
-        _secondIndex = 1;
-        _isLastPoint = false;
+        CheckArrival();
     }
 
-    private void CheckStartOver()
+    private void MoveToNextPoint()
     {
-        if (_secondIndex >= _patrolPoints.Length)
+        _currentTime += Time.deltaTime;
+        var progress = _currentTime / _travelTime;
+        transform.position = Vector3.Lerp(_startPosition, _endPosition, progress);
+    }
+
+    private void CheckArrival()
+    {
+        if (_currentTime>_travelTime)
         {
-            _firstIndex = _patrolPoints.Length - 1;
-            _secondIndex = 0;
-            _isLastPoint = true;
+            _currentTime = 0;
+            SetNextPoints();
         }
     }
 
-   
+    
 }
